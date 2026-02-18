@@ -137,31 +137,54 @@ def generate_audio(text: str, output_path: Path) -> Path:
 
 
 def pre_generate() -> None:
-    """Generate all static template messages and populate the cache."""
+    """Generate all static template messages and populate the cache.
+
+    Each phrase is generated in a separate subprocess to avoid the
+    Chatterbox MPS memory leak that causes OOM after ~10-15 generations
+    in a single process.
+    """
+    import subprocess
+
     sys.path.insert(0, str(SCRIPT_DIR))
     from message_templates import get_all_static_messages, message_hash
     import cache_manager
 
     messages = get_all_static_messages()
     total = len(messages)
-    print(f"[voxhook-tts] Pre-generating {total} phrases...", file=sys.stderr)
+    print(f"[voxhook-tts] Pre-generating {total} phrases (subprocess-per-phrase)...", file=sys.stderr)
+
+    generated = 0
+    skipped = 0
+    failed = 0
 
     for i, text in enumerate(messages, 1):
         h = message_hash(text)
         if cache_manager.lookup(h) is not None:
             print(f"[voxhook-tts] ({i}/{total}) Cached: {text!r}", file=sys.stderr)
+            skipped += 1
             continue
 
-        wav_path = CACHE_DIR / f"{h}.wav"
-        try:
-            generate_audio(text, wav_path)
-            cache_manager.store(h, text, wav_path)
-            print(f"[voxhook-tts] ({i}/{total}) Generated: {text!r}", file=sys.stderr)
-        except Exception as e:
-            print(f"[voxhook-tts] ({i}/{total}) FAILED: {text!r} -- {e}", file=sys.stderr)
+        # Run each generation in its own subprocess to reclaim memory
+        print(f"[voxhook-tts] ({i}/{total}) Generating: {text!r}", file=sys.stderr)
+        result = subprocess.run(
+            ["uv", "run", "--python", "3.11", str(SCRIPT_DIR / "generate.py"), "--text", text],
+            capture_output=True,
+            text=True,
+        )
+
+        if result.returncode == 0:
+            print(f"[voxhook-tts] ({i}/{total}) Done: {text!r}", file=sys.stderr)
+            generated += 1
+        else:
+            print(f"[voxhook-tts] ({i}/{total}) FAILED: {text!r}", file=sys.stderr)
+            if result.stderr:
+                # Print last 3 lines of stderr for context
+                for line in result.stderr.strip().splitlines()[-3:]:
+                    print(f"  {line}", file=sys.stderr)
+            failed += 1
 
     stats = cache_manager.get_cache_stats()
-    print(f"[voxhook-tts] Pre-generation complete. Cache: {stats['valid']} valid entries.", file=sys.stderr)
+    print(f"[voxhook-tts] Pre-generation complete. Generated: {generated}, skipped: {skipped}, failed: {failed}. Cache: {stats['valid']} valid entries.", file=sys.stderr)
 
 
 def generate_single(text: str) -> None:
