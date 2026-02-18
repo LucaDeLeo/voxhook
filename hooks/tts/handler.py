@@ -84,15 +84,31 @@ def play_audio(wav_path, volume: float):
 
 
 def play_sequence(wav_paths: list, volume: float) -> None:
-    """Play WAV files in sequence via a background shell one-liner."""
-    import shlex
-    parts = [f"afplay -v {volume} {shlex.quote(str(p))}" for p in wav_paths]
-    cmd = " && ".join(parts)
-    subprocess.Popen(
-        ["sh", "-c", cmd],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    """Concatenate WAVs into a temp file and play once (zero gap)."""
+    import tempfile
+    import wave
+
+    try:
+        # Read params from first file
+        with wave.open(str(wav_paths[0]), "rb") as first:
+            params = first.getparams()
+
+        fd, tmp = tempfile.mkstemp(suffix=".wav")
+        with wave.open(tmp, "wb") as out:
+            out.setparams(params)
+            for p in wav_paths:
+                with wave.open(str(p), "rb") as w:
+                    out.writeframes(w.readframes(w.getnframes()))
+
+        # Play the combined file, then clean up
+        subprocess.Popen(
+            ["sh", "-c", f"afplay -v {volume} {tmp} ; rm -f {tmp}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        # Fallback: just play the first file
+        play_audio(wav_paths[0], volume)
 
 
 def send_ntfy(topic: str, text: str, server: str, priority: int, tags: str, title: str) -> None:
