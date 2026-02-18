@@ -74,16 +74,20 @@ def categorize_notification(message: str) -> str:
     return "general"
 
 
-def play_audio(wav_path, volume: float):
+def play_audio(wav_path, volume: float, speed: float = 1.0):
     """Play a WAV file via afplay. Returns the Popen handle."""
+    cmd = ["afplay", "-v", str(volume)]
+    if speed != 1.0:
+        cmd += ["-r", str(speed)]
+    cmd.append(str(wav_path))
     return subprocess.Popen(
-        ["afplay", "-v", str(volume), str(wav_path)],
+        cmd,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
 
 
-def play_sequence(wav_paths: list, volume: float) -> None:
+def play_sequence(wav_paths: list, volume: float, speed: float = 1.0) -> None:
     """Play WAVs back-to-back in a background Python process.
 
     Uses subprocess.run in a loop so the gap between files is just
@@ -94,10 +98,11 @@ def play_sequence(wav_paths: list, volume: float) -> None:
     code = (
         "import subprocess, sys, json; "
         "d = json.load(sys.stdin); "
-        "[subprocess.run(['afplay', '-v', str(d['v']), f], "
+        "cmd = ['afplay', '-v', str(d['v'])] + (['-r', str(d['r'])] if d['r'] != 1.0 else []); "
+        "[subprocess.run(cmd + [f], "
         "stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) for f in d['f']]"
     )
-    payload = _json.dumps({"f": [str(p) for p in wav_paths], "v": volume})
+    payload = _json.dumps({"f": [str(p) for p in wav_paths], "v": volume, "r": speed})
     proc = subprocess.Popen(
         [sys.executable, "-c", code],
         stdin=subprocess.PIPE,
@@ -193,6 +198,7 @@ def main() -> None:
 
     if config.get("sound_enabled", True):
         volume = config.get("volume", 0.6)
+        speed = config.get("playback_speed", 1.0)
 
         # Look up the generic message WAV
         msg_hash = message_hash(text)
@@ -203,27 +209,27 @@ def main() -> None:
             proj_wav = lookup_project_wav(project_name)
 
             if proj_wav and msg_wav:
-                play_sequence([proj_wav, msg_wav], volume)
+                play_sequence([proj_wav, msg_wav], volume, speed)
             elif proj_wav:
-                play_audio(proj_wav, volume)
+                play_audio(proj_wav, volume, speed)
                 spawn_background_generate("--text", text)
             elif msg_wav:
-                play_audio(msg_wav, volume)
+                play_audio(msg_wav, volume, speed)
                 spawn_background_generate("--project", project_name)
             else:
                 fallback = cache_manager.get_any_cached_file()
                 if fallback:
-                    play_audio(fallback, volume)
+                    play_audio(fallback, volume, speed)
                 spawn_background_generate("--text", text)
                 spawn_background_generate("--project", project_name)
         else:
             # No project name -- just play the message
             if msg_wav:
-                play_audio(msg_wav, volume)
+                play_audio(msg_wav, volume, speed)
             else:
                 fallback = cache_manager.get_any_cached_file()
                 if fallback:
-                    play_audio(fallback, volume)
+                    play_audio(fallback, volume, speed)
                 spawn_background_generate("--text", text)
 
     # Send ntfy push notification
