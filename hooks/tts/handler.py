@@ -198,8 +198,8 @@ def main() -> None:
         msg_hash = message_hash(text)
         msg_wav = cache_manager.lookup(msg_hash)
 
-        if event_type == "Stop" and project_name:
-            # Try to play: [project_name.wav] -> [generic_message.wav]
+        if project_name:
+            # Try to play: [project_name.wav] -> [message.wav]
             proj_wav = lookup_project_wav(project_name)
 
             if proj_wav and msg_wav:
@@ -217,7 +217,7 @@ def main() -> None:
                 spawn_background_generate("--text", text)
                 spawn_background_generate("--project", project_name)
         else:
-            # Non-Stop events or no project -- just play the message
+            # No project name -- just play the message
             if msg_wav:
                 play_audio(msg_wav, volume)
             else:
