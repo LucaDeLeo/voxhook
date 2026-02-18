@@ -114,7 +114,7 @@ if [[ -n "$voice_path" ]]; then
     else
         err "File not found: ${voice_path}"
         read -rp "Continue without TTS? [Y/n] " cont
-        if [[ "${cont,,}" == "n" ]]; then
+        if [[ "$cont" == "n" || "$cont" == "N" ]]; then
             exit 1
         fi
     fi
@@ -270,7 +270,7 @@ if [[ "$enable_tts" == true ]]; then
     echo "  This generates WAV files for all template messages upfront."
     echo "  Takes a few minutes but ensures instant playback from the start."
     read -rp "$(echo -e "${CYAN}Pre-generate?${NC} [y/N]: ")" pregen
-    if [[ "${pregen,,}" == "y" ]]; then
+    if [[ "$pregen" == "y" || "$pregen" == "Y" ]]; then
         info "Starting pre-generation (this will take a while)..."
         uv run --python 3.11 "$INSTALL_DIR/tts/generate.py" --pre-generate || {
             warn "Pre-generation had errors. TTS will generate on-demand instead."
