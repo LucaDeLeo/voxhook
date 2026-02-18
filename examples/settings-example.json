@@ -1,0 +1,38 @@
+{
+  "_comment": "Add these entries to your ~/.claude/settings.json under the 'hooks' key",
+  "hooks": {
+    "Stop": [
+      {
+        "_comment": "Voxhook push notification on task completion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "nohup uv run ~/.claude/hooks/voxhook/notify/handler.py --topic=YOUR_TOPIC_HERE &"
+          }
+        ]
+      },
+      {
+        "_comment": "Voxhook TTS on task completion (with optional ntfy)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run ~/.claude/hooks/voxhook/tts/handler.py --ntfy-topic=YOUR_TOPIC_HERE",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "_comment": "Voxhook TTS on notifications (permission requests, idle, etc.)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run ~/.claude/hooks/voxhook/tts/handler.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

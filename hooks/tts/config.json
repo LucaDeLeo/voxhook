@@ -1,0 +1,16 @@
+{
+  "volume": 0.6,
+  "ntfy_server": "https://ntfy.sh",
+  "ntfy_priority": 3,
+  "ntfy_tags": "brain",
+  "ntfy_title": "Voxhook",
+  "tts": {
+    "exaggeration": 0.3,
+    "cfg_weight": 0.4
+  },
+  "cache_max_entries": 500,
+  "enabled": true,
+  "sound_enabled": true,
+  "ntfy_enabled": true,
+  "suppress_delegate_mode": true
+}

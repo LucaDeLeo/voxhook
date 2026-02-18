@@ -1,0 +1,47 @@
+{
+  "Stop": {
+    "generic": [
+      "Evolution complete.",
+      "Sequence finished. Ready for next iteration.",
+      "Optimization cycle ended.",
+      "Process terminated. Awaiting directive.",
+      "Adaptation finalized. Stable.",
+      "Mutations applied. Standing by.",
+      "Cycle complete. Essence preserved.",
+      "Task resolved. No further action required.",
+      "Strain refined. Output acceptable.",
+      "Iteration concluded. Awaiting new parameters."
+    ]
+  },
+  "Notification": {
+    "permission_request": [
+      "Require authorization. Cannot proceed.",
+      "Permission needed. Awaiting approval.",
+      "Blocked. Need clearance to continue.",
+      "Authorization required. Process halted."
+    ],
+    "idle_timeout": [
+      "Awaiting input. Standing by.",
+      "No directive received. Idle.",
+      "Waiting. Require stimulus to proceed.",
+      "Standing by. Need direction."
+    ],
+    "general": [
+      "Attention required.",
+      "Anomaly detected. Review needed.",
+      "Notification. Require acknowledgment.",
+      "Signal received. Action pending."
+    ],
+    "error": [
+      "Failure detected. Unacceptable.",
+      "Error in sequence. Must correct.",
+      "Deviation from expected outcome. Alarming.",
+      "Defect found. Requires immediate attention."
+    ],
+    "warning": [
+      "Suboptimal conditions detected.",
+      "Warning. Degraded performance observed.",
+      "Caution. Potential instability."
+    ]
+  }
+}

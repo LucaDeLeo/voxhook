@@ -1,0 +1,47 @@
+{
+  "Stop": {
+    "generic": [
+      "Task complete.",
+      "Done. Standing by.",
+      "Finished. Ready for next.",
+      "Work concluded. Awaiting directive.",
+      "Operation finished. Standing by.",
+      "Assignment complete.",
+      "Process done. Ready.",
+      "Finished. All clear.",
+      "Task resolved. Idle.",
+      "Complete. Next when ready."
+    ]
+  },
+  "Notification": {
+    "permission_request": [
+      "Permission needed.",
+      "Authorization required.",
+      "Approval needed to continue.",
+      "Waiting for permission."
+    ],
+    "idle_timeout": [
+      "Waiting for input.",
+      "Standing by. Need direction.",
+      "Idle. Awaiting instructions.",
+      "Ready for your command."
+    ],
+    "general": [
+      "Notification.",
+      "Attention required.",
+      "Update available.",
+      "Status change detected."
+    ],
+    "error": [
+      "Error detected.",
+      "Failure occurred.",
+      "Problem found. Review needed.",
+      "Error requires attention."
+    ],
+    "warning": [
+      "Warning.",
+      "Caution advised.",
+      "Potential issue detected."
+    ]
+  }
+}

@@ -1,0 +1,208 @@
+{
+  "hook_events": {
+    "Stop": [
+      {"title": "Claude Code", "message": "Task completed successfully"},
+      {"title": "Claude Code", "message": "Work finished"},
+      {"title": "Claude Code", "message": "Request fulfilled"},
+      {"title": "Claude Code", "message": "Assignment completed"},
+      {"title": "Claude Code", "message": "Operation concluded"}
+    ],
+    "SubagentStop": [
+      {"title": "Claude Code", "message": "Subtask completed"},
+      {"title": "Claude Code", "message": "Subagent finished work"}
+    ],
+    "Notification": {
+      "permission_request": [
+        {"title": "Claude Code", "message": "Requesting permission to use tools"},
+        {"title": "Claude Code", "message": "Authorization needed to continue"}
+      ],
+      "idle_timeout": [
+        {"title": "Claude Code", "message": "Waiting for your input"},
+        {"title": "Claude Code", "message": "Ready for your next command"}
+      ],
+      "default": [
+        {"title": "Claude Code", "message": "Notification from Claude"},
+        {"title": "Claude Code", "message": "Status update available"}
+      ]
+    },
+    "UserPromptSubmit": {"title": "Claude Code", "message": "Processing your request"},
+    "PreToolUse": {
+      "default": {"title": "Claude Code", "message": "Starting task"}
+    },
+    "PostToolUse": {
+      "ExitPlanMode": [
+        {"title": "Claude Code", "message": "Plan ready for approval"},
+        {"title": "Claude Code", "message": "Waiting for your approval to proceed"}
+      ],
+      "default": [
+        {"title": "Claude Code", "message": "Task completed"},
+        {"title": "Claude Code", "message": "Operation finished"}
+      ]
+    }
+  },
+  "tools": {
+    "Read": {"title": "Claude Code", "message": "Reading file"},
+    "NotebookRead": {"title": "Claude Code", "message": "Reading notebook"},
+    "Edit": {"title": "Claude Code", "message": "Editing code"},
+    "MultiEdit": {"title": "Claude Code", "message": "Making multiple edits"},
+    "Write": {"title": "Claude Code", "message": "Writing file"},
+    "NotebookEdit": {"title": "Claude Code", "message": "Editing notebook"},
+    "Grep": {"title": "Claude Code", "message": "Searching files"},
+    "Glob": {"title": "Claude Code", "message": "Finding files"},
+    "LS": {"title": "Claude Code", "message": "Listing directory"},
+    "Bash": {"title": "Claude Code", "message": "Running system command"},
+    "Task": {"title": "Claude Code", "message": "Starting agent task"},
+    "WebFetch": {"title": "Claude Code", "message": "Fetching web content"},
+    "WebSearch": {"title": "Claude Code", "message": "Searching web"},
+    "TodoWrite": [
+      {"title": "Claude Code", "message": "Updating task list"},
+      {"title": "Claude Code", "message": "Managing project tasks"},
+      {"title": "Claude Code", "message": "Tracking progress"}
+    ]
+  },
+  "context_patterns": {
+    "file_operations": {
+      "Read": {
+        "by_extension": {
+          ".py": [
+            {"title": "Claude Code", "message": "Reading Python file"},
+            {"title": "Claude Code", "message": "Accessing Python code"}
+          ],
+          ".js": [
+            {"title": "Claude Code", "message": "Reading JavaScript file"},
+            {"title": "Claude Code", "message": "Accessing JavaScript code"}
+          ],
+          ".ts": [
+            {"title": "Claude Code", "message": "Reading TypeScript file"},
+            {"title": "Claude Code", "message": "Accessing TypeScript code"}
+          ],
+          ".md": [
+            {"title": "Claude Code", "message": "Reading documentation"},
+            {"title": "Claude Code", "message": "Reviewing markdown file"}
+          ],
+          ".json": [
+            {"title": "Claude Code", "message": "Reading configuration"},
+            {"title": "Claude Code", "message": "Accessing JSON data"}
+          ],
+          ".yml": [
+            {"title": "Claude Code", "message": "Reading YAML configuration"},
+            {"title": "Claude Code", "message": "Checking YAML file"}
+          ],
+          ".yaml": [
+            {"title": "Claude Code", "message": "Reading YAML configuration"},
+            {"title": "Claude Code", "message": "Checking YAML file"}
+          ]
+        },
+        "by_filename": {
+          "package.json": {"title": "Claude Code", "message": "Reading package configuration"},
+          "requirements.txt": {"title": "Claude Code", "message": "Reading Python requirements"},
+          "Dockerfile": {"title": "Claude Code", "message": "Reading Docker configuration"},
+          "README.md": {"title": "Claude Code", "message": "Reading project README"},
+          "CLAUDE.md": {"title": "Claude Code", "message": "Reading Claude instructions"}
+        },
+        "default": [
+          {"title": "Claude Code", "message": "Reading file"},
+          {"title": "Claude Code", "message": "Accessing file content"}
+        ]
+      },
+      "Edit": {
+        "by_extension": {
+          ".py": [
+            {"title": "Claude Code", "message": "Editing Python code"},
+            {"title": "Claude Code", "message": "Modifying Python file"}
+          ],
+          ".js": [
+            {"title": "Claude Code", "message": "Editing JavaScript code"},
+            {"title": "Claude Code", "message": "Modifying JavaScript file"}
+          ],
+          ".ts": [
+            {"title": "Claude Code", "message": "Editing TypeScript code"},
+            {"title": "Claude Code", "message": "Modifying TypeScript file"}
+          ],
+          ".md": [
+            {"title": "Claude Code", "message": "Updating documentation"},
+            {"title": "Claude Code", "message": "Editing markdown content"}
+          ],
+          ".json": [
+            {"title": "Claude Code", "message": "Updating configuration"},
+            {"title": "Claude Code", "message": "Modifying JSON data"}
+          ]
+        },
+        "by_filename": {
+          "package.json": {"title": "Claude Code", "message": "Updating package configuration"},
+          "requirements.txt": {"title": "Claude Code", "message": "Updating Python requirements"},
+          "CLAUDE.md": {"title": "Claude Code", "message": "Updating Claude instructions"}
+        },
+        "default": [
+          {"title": "Claude Code", "message": "Editing file"},
+          {"title": "Claude Code", "message": "Making changes"}
+        ]
+      },
+      "Write": {
+        "by_extension": {
+          ".py": [
+            {"title": "Claude Code", "message": "Creating Python file"},
+            {"title": "Claude Code", "message": "Writing Python code"}
+          ],
+          ".js": [
+            {"title": "Claude Code", "message": "Creating JavaScript file"},
+            {"title": "Claude Code", "message": "Writing JavaScript code"}
+          ],
+          ".md": [
+            {"title": "Claude Code", "message": "Creating documentation"},
+            {"title": "Claude Code", "message": "Writing markdown file"}
+          ],
+          ".json": [
+            {"title": "Claude Code", "message": "Creating configuration"},
+            {"title": "Claude Code", "message": "Writing JSON data"}
+          ]
+        },
+        "default": [
+          {"title": "Claude Code", "message": "Creating new file"},
+          {"title": "Claude Code", "message": "Writing file"}
+        ]
+      }
+    },
+    "bash_commands": {
+      "git": {
+        "git status": [
+          {"title": "Claude Code", "message": "Checking repository status"},
+          {"title": "Claude Code", "message": "Reviewing changes"}
+        ],
+        "git add": [
+          {"title": "Claude Code", "message": "Staging files"},
+          {"title": "Claude Code", "message": "Preparing commit"}
+        ],
+        "git commit": [
+          {"title": "Claude Code", "message": "Creating commit"},
+          {"title": "Claude Code", "message": "Saving changes"}
+        ],
+        "git push": [
+          {"title": "Claude Code", "message": "Pushing to remote"},
+          {"title": "Claude Code", "message": "Syncing repository"}
+        ],
+        "git pull": [
+          {"title": "Claude Code", "message": "Pulling changes"},
+          {"title": "Claude Code", "message": "Updating repository"}
+        ]
+      },
+      "npm": [
+        {"title": "Claude Code", "message": "Running npm command"},
+        {"title": "Claude Code", "message": "Managing packages"}
+      ],
+      "uv": [
+        {"title": "Claude Code", "message": "Running uv command"},
+        {"title": "Claude Code", "message": "Managing Python packages"}
+      ],
+      "pip": [
+        {"title": "Claude Code", "message": "Installing Python packages"},
+        {"title": "Claude Code", "message": "Managing dependencies"}
+      ],
+      "default": [
+        {"title": "Claude Code", "message": "Running system command"},
+        {"title": "Claude Code", "message": "Executing command"}
+      ]
+    }
+  },
+  "default": {"title": "Claude Code", "message": "Task completed"}
+}
