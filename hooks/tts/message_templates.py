@@ -32,14 +32,27 @@ _FALLBACK_TEMPLATES: dict[str, dict[str, list[str]]] = {
 }
 
 
-def _load_templates() -> dict[str, dict[str, list[str]]]:
+def _load_templates() -> dict:
     """Load templates from JSON file, falling back to built-in defaults."""
+    import sys
+
     try:
         data = json.loads(TEMPLATES_FILE.read_text())
-        if isinstance(data, dict):
-            return data
-    except (OSError, json.JSONDecodeError):
-        pass
+        if not isinstance(data, dict):
+            print(f"[voxhook-tts] WARNING: templates.json is not a dict, using fallback", file=sys.stderr)
+            return _FALLBACK_TEMPLATES
+        # Basic schema validation: each value should be a dict of lists
+        for event, pools in data.items():
+            if not isinstance(pools, dict):
+                print(f"[voxhook-tts] WARNING: templates.json[{event!r}] is not a dict, using fallback", file=sys.stderr)
+                return _FALLBACK_TEMPLATES
+            for key, messages in pools.items():
+                if not isinstance(messages, list) or not all(isinstance(m, str) for m in messages):
+                    print(f"[voxhook-tts] WARNING: templates.json[{event!r}][{key!r}] is not a list of strings, using fallback", file=sys.stderr)
+                    return _FALLBACK_TEMPLATES
+        return data
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[voxhook-tts] WARNING: Could not load templates.json ({e}), using fallback", file=sys.stderr)
     return _FALLBACK_TEMPLATES
 
 

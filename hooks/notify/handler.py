@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # /// script
-# requires-python = ">=3.13"
+# requires-python = ">=3.11"
 # dependencies = [
 #     "httpx",
 # ]
@@ -53,10 +53,11 @@ from common import (
 )
 
 # Type aliases for complex recurring types
-type NotificationMapping = dict[str, dict[str, str] | str | list[str]]
-type ToolInput = dict[str, str]
-type HookData = dict[str, str | dict | None]
-type MessageVariations = str | list[str]
+from typing import Union
+NotificationMapping = dict[str, Union[dict[str, str], str, list[str]]]
+ToolInput = dict[str, str]
+HookData = dict[str, Union[str, dict, None]]
+MessageVariations = Union[str, list[str]]
 
 def setup_module_logger(module_name: str, log_file: Path | None = None) -> logging.Logger:
     """Set up a module-specific logger with file handler."""

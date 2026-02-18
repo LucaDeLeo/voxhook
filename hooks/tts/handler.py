@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # /// script
-# requires-python = ">=3.13"
+# requires-python = ">=3.11"
 # dependencies = [
 #     "httpx",
 # ]
@@ -74,7 +74,7 @@ def categorize_notification(message: str) -> str:
     return "general"
 
 
-def play_audio(wav_path: Path, volume: float) -> subprocess.Popen:
+def play_audio(wav_path, volume: float):
     """Play a WAV file via afplay. Returns the Popen handle."""
     return subprocess.Popen(
         ["afplay", "-v", str(volume), str(wav_path)],
@@ -83,9 +83,10 @@ def play_audio(wav_path: Path, volume: float) -> subprocess.Popen:
     )
 
 
-def play_sequence(wav_paths: list[Path], volume: float) -> None:
+def play_sequence(wav_paths: list, volume: float) -> None:
     """Play WAV files in sequence via a background shell one-liner."""
-    parts = [f"afplay -v {volume} {str(p)}" for p in wav_paths]
+    import shlex
+    parts = [f"afplay -v {volume} {shlex.quote(str(p))}" for p in wav_paths]
     cmd = " && ".join(parts)
     subprocess.Popen(
         ["sh", "-c", cmd],
@@ -96,17 +97,29 @@ def play_sequence(wav_paths: list[Path], volume: float) -> None:
 
 def send_ntfy(topic: str, text: str, server: str, priority: int, tags: str, title: str) -> None:
     """Send ntfy.sh push notification in a fire-and-forget subprocess."""
+    import json as _json
+    # Pass all parameters as a JSON blob via stdin to avoid shell/code injection
+    payload = _json.dumps({
+        "url": f"{server.rstrip('/')}/{topic}",
+        "text": text,
+        "title": title,
+        "priority": str(priority),
+        "tags": tags,
+    })
     code = (
-        "import httpx; "
-        f"httpx.post('{server.rstrip('/')}/{topic}', "
-        f"content={text!r}.encode('utf-8'), "
-        f"headers={{'Title': {title!r}, 'Priority': '{priority}', 'Tags': '{tags}'}})"
+        "import sys, json, httpx; "
+        "d = json.load(sys.stdin); "
+        "httpx.post(d['url'], content=d['text'].encode('utf-8'), "
+        "headers={'Title': d['title'], 'Priority': d['priority'], 'Tags': d['tags']})"
     )
-    subprocess.Popen(
+    proc = subprocess.Popen(
         [sys.executable, "-c", code],
+        stdin=subprocess.PIPE,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+    proc.stdin.write(payload.encode())
+    proc.stdin.close()
 
 
 def spawn_background_generate(flag: str, value: str) -> None:
@@ -118,7 +131,7 @@ def spawn_background_generate(flag: str, value: str) -> None:
     )
 
 
-def lookup_project_wav(project_name: str) -> Path | None:
+def lookup_project_wav(project_name: str):
     """Look up cached WAV for a project name."""
     h = message_hash(f"project:{project_name}")
     return cache_manager.lookup(h)

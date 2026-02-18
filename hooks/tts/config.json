@@ -8,7 +8,6 @@
     "exaggeration": 0.3,
     "cfg_weight": 0.4
   },
-  "cache_max_entries": 500,
   "enabled": true,
   "sound_enabled": true,
   "ntfy_enabled": true,

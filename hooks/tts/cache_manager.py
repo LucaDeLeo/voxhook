@@ -18,16 +18,28 @@ def _load_index() -> dict:
     """Load the cache index from disk."""
     if INDEX_FILE.exists():
         try:
-            return json.loads(INDEX_FILE.read_text())
+            data = json.loads(INDEX_FILE.read_text())
+            # Validate schema
+            if isinstance(data, dict) and isinstance(data.get("entries"), dict):
+                return data
         except (json.JSONDecodeError, OSError):
-            return {"entries": {}}
+            pass
     return {"entries": {}}
 
 
 def _save_index(index: dict) -> None:
-    """Persist the cache index to disk."""
+    """Persist the cache index to disk atomically."""
+    import tempfile
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    INDEX_FILE.write_text(json.dumps(index, indent=2))
+    # Write to temp file then rename for atomicity
+    fd, tmp_path = tempfile.mkstemp(dir=str(CACHE_DIR), suffix=".tmp")
+    try:
+        with open(fd, "w", encoding="utf-8") as f:
+            json.dump(index, f, indent=2)
+        Path(tmp_path).replace(INDEX_FILE)
+    except Exception:
+        Path(tmp_path).unlink(missing_ok=True)
+        raise
 
 
 def lookup(text_hash: str) -> Optional[Path]:

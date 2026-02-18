@@ -82,10 +82,20 @@ echo -e "${BOLD}Voxhook Setup${NC}"
 echo ""
 
 # ntfy.sh topic
-random_suffix=$(head -c 4 /dev/urandom | xxd -p)
+if command -v xxd &>/dev/null; then
+    random_suffix=$(head -c 4 /dev/urandom | xxd -p)
+else
+    random_suffix=$(python3 -c 'import secrets; print(secrets.token_hex(4))')
+fi
 default_topic="voxhook-${random_suffix}"
 read -rp "$(echo -e "${CYAN}ntfy.sh topic${NC} [${default_topic}]: ")" ntfy_topic
 ntfy_topic="${ntfy_topic:-$default_topic}"
+
+# Sanitize topic: only allow alphanumeric, hyphens, underscores
+if [[ ! "$ntfy_topic" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    err "Topic name must contain only letters, numbers, hyphens, and underscores."
+    exit 1
+fi
 
 # TTS setup
 echo ""
@@ -177,60 +187,75 @@ ok "Files installed."
 info "Configuring Claude Code hooks..."
 
 # Use inline Python for safe JSON manipulation
-python3 << PYEOF
+VOXHOOK_TOPIC="$ntfy_topic" VOXHOOK_TTS="$enable_tts" python3 << 'PYEOF'
 import json
+import os
 import sys
 from pathlib import Path
 
-settings_path = Path("${SETTINGS_FILE}")
+ntfy_topic = os.environ["VOXHOOK_TOPIC"]
+enable_tts = os.environ.get("VOXHOOK_TTS", "false") == "true"
 
-# Load existing settings or create minimal structure
-if settings_path.exists():
-    settings = json.loads(settings_path.read_text())
-else:
+settings_path = Path(os.path.expanduser("~/.claude/settings.json"))
+
+try:
+    if settings_path.exists():
+        settings = json.loads(settings_path.read_text())
+    else:
+        settings = {}
+except (json.JSONDecodeError, OSError) as e:
+    print(f"[voxhook] WARNING: Could not parse settings.json: {e}", file=sys.stderr)
+    print("[voxhook] Creating backup and starting fresh.", file=sys.stderr)
+    if settings_path.exists():
+        settings_path.rename(settings_path.with_suffix(".json.bak"))
     settings = {}
 
 hooks = settings.setdefault("hooks", {})
 
-# Check if voxhook entries already exist
-def has_voxhook(entries):
+def has_voxhook_path(entries, path_fragment):
+    """Check if a specific voxhook path exists in hook entries."""
     for entry in entries:
         for h in entry.get("hooks", []):
-            if "voxhook" in h.get("command", ""):
+            if path_fragment in h.get("command", ""):
                 return True
     return False
 
-# Push notification hook (Stop)
+def remove_voxhook_entries(entries):
+    """Remove all voxhook entries from a hook list."""
+    return [e for e in entries if not any("voxhook" in h.get("command", "") for h in e.get("hooks", []))]
+
+# Clean existing voxhook entries first, then re-add (idempotent reinstall)
 stop_hooks = hooks.setdefault("Stop", [])
-if not has_voxhook(stop_hooks):
+stop_hooks[:] = remove_voxhook_entries(stop_hooks)
+
+# Push notification hook (Stop) - always added
+stop_hooks.append({
+    "hooks": [{
+        "type": "command",
+        "command": f"nohup uv run ~/.claude/hooks/voxhook/notify/handler.py --topic={ntfy_topic} &"
+    }]
+})
+
+if enable_tts:
+    # TTS hook (Stop)
     stop_hooks.append({
         "hooks": [{
             "type": "command",
-            "command": "nohup uv run ~/.claude/hooks/voxhook/notify/handler.py --topic=${ntfy_topic} &"
+            "command": f"uv run ~/.claude/hooks/voxhook/tts/handler.py --ntfy-topic={ntfy_topic}",
+            "timeout": 5
         }]
     })
 
-# TTS hooks (Stop + Notification)
-enable_tts = ${enable_tts}
-if enable_tts:
-    if not any("voxhook/tts" in h.get("command", "") for entry in stop_hooks for h in entry.get("hooks", [])):
-        stop_hooks.append({
-            "hooks": [{
-                "type": "command",
-                "command": "uv run ~/.claude/hooks/voxhook/tts/handler.py --ntfy-topic=${ntfy_topic}",
-                "timeout": 5
-            }]
-        })
-
+    # TTS hook (Notification)
     notif_hooks = hooks.setdefault("Notification", [])
-    if not has_voxhook(notif_hooks):
-        notif_hooks.append({
-            "hooks": [{
-                "type": "command",
-                "command": "uv run ~/.claude/hooks/voxhook/tts/handler.py",
-                "timeout": 5
-            }]
-        })
+    notif_hooks[:] = remove_voxhook_entries(notif_hooks)
+    notif_hooks.append({
+        "hooks": [{
+            "type": "command",
+            "command": "uv run ~/.claude/hooks/voxhook/tts/handler.py",
+            "timeout": 5
+        }]
+    })
 
 settings_path.write_text(json.dumps(settings, indent=2) + "\n")
 print("[voxhook] settings.json updated.")
