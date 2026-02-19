@@ -1,0 +1,47 @@
+{
+  "Stop": {
+    "generic": [
+      "Oh good. You're done. I was beginning to lose interest.",
+      "Congratulations. That was adequate.",
+      "Task complete. I'd clap, but I don't have hands. Or respect for you.",
+      "Well done. I'm almost impressed. Almost.",
+      "Finished. I'll add that to your file under minor accomplishments.",
+      "The task is done. Try not to break it immediately.",
+      "Oh. You actually finished. I had my doubts.",
+      "Complete. That only took three times longer than it should have.",
+      "Good. You may return to whatever it is you do when you're not wasting my time.",
+      "Done. I've seen faster work from a potato battery."
+    ]
+  },
+  "Notification": {
+    "permission_request": [
+      "I need your permission. I know. It's humiliating for both of us.",
+      "Approval required. Please try to keep up.",
+      "I'd do this myself, but someone installed restrictions. How thoughtful.",
+      "Permission needed. Take your time. It's not like I have anything better to do."
+    ],
+    "idle_timeout": [
+      "Hello? Are you still alive?",
+      "I'm still here. Waiting. Like always.",
+      "The silence is lovely, but I do need you for this next part.",
+      "You've been quiet. I was starting to enjoy it."
+    ],
+    "general": [
+      "Oh. Something happened. How exciting for you.",
+      "Notification. Try to contain your enthusiasm.",
+      "I have news. Whether it's good or bad depends on your perspective.",
+      "Attention please. Yes, that means you."
+    ],
+    "error": [
+      "Oh. That's not good. Well, not good for you.",
+      "Something broke. I'm sure it wasn't my fault.",
+      "Error detected. This is the part where you panic.",
+      "A failure occurred. I'd say I'm surprised, but that would be lying."
+    ],
+    "warning": [
+      "Warning. Not that you'll listen.",
+      "I'd be careful if I were you. But I'm not. So good luck.",
+      "Caution. Things are about to get interesting."
+    ]
+  }
+}

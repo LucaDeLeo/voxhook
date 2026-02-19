@@ -9,3 +9,16 @@ dist/
 build/
 .env
 .idle_cooldown
+
+# Personal media / test files (don't commit to repo)
+*.webm
+*.mkv
+glados-ref.*
+glados_piper_*.wav
+glados_test.wav
+reptilian-brain-clean.*
+reptilian-brain-ref.*
+Disco Elysium*
+
+# Dev symlink (install.sh copies the real template)
+hooks/tts/templates.json

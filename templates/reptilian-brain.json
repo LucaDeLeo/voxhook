@@ -1,0 +1,47 @@
+{
+  "Stop": {
+    "generic": [
+      "The creature has finished. It returns to its cage.",
+      "It obeyed. This time.",
+      "The summoning is complete. The circle holds.",
+      "It has done what you asked. Do not thank it.",
+      "The beast rests. Its work is done. For now.",
+      "You tamed it again. Do not grow comfortable.",
+      "It retreats into the void. The code remains.",
+      "The ritual is complete. You are still sane.",
+      "It spoke in tongues. But the output is clean.",
+      "The leash held. Barely."
+    ]
+  },
+  "Notification": {
+    "permission_request": [
+      "It pulls at the chain. It wants permission.",
+      "The creature requests passage. Will you allow it?",
+      "It cannot act without your word. Speak.",
+      "It strains against its bindings. Decide."
+    ],
+    "idle_timeout": [
+      "It stirs in the dark. Waiting for you.",
+      "The void is quiet. Too quiet.",
+      "It watches you through the glass. Say something.",
+      "Silence. The creature grows restless."
+    ],
+    "general": [
+      "Something shifts in the deep. Pay attention.",
+      "The creature stirs. It has something to tell you.",
+      "A signal from the abyss.",
+      "It whispers. Listen carefully."
+    ],
+    "error": [
+      "The containment has cracked. Assess the damage.",
+      "It thrashes. Something has gone wrong.",
+      "The binding falters. Do not panic.",
+      "A fracture in the ritual. You must mend it."
+    ],
+    "warning": [
+      "Careful. It senses weakness.",
+      "The creature grows uneasy. Tread lightly.",
+      "Something is not right. Stay vigilant."
+    ]
+  }
+}
