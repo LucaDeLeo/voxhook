@@ -81,20 +81,35 @@ echo ""
 echo -e "${BOLD}Voxhook Setup${NC}"
 echo ""
 
-# ntfy.sh topic
-if command -v xxd &>/dev/null; then
-    random_suffix=$(head -c 4 /dev/urandom | xxd -p)
-else
-    random_suffix=$(python3 -c 'import secrets; print(secrets.token_hex(4))')
-fi
-default_topic="voxhook-${random_suffix}"
-read -rp "$(echo -e "${CYAN}ntfy.sh topic${NC} [${default_topic}]: ")" ntfy_topic
-ntfy_topic="${ntfy_topic:-$default_topic}"
+# Push notifications (ntfy.sh)
+echo -e "${BOLD}Push Notifications${NC}"
+echo "  ntfy.sh sends push notifications to your phone/desktop when"
+echo "  Claude finishes a task, needs permission, or goes idle."
+echo "  Free, no account needed — just pick a topic name."
+echo "  Install the ntfy app (iOS/Android) or use the web UI."
+echo ""
+read -rp "$(echo -e "${CYAN}Enable push notifications?${NC} [Y/n]: ")" enable_ntfy_input
+enable_ntfy_input="${enable_ntfy_input:-y}"
 
-# Sanitize topic: only allow alphanumeric, hyphens, underscores
-if [[ ! "$ntfy_topic" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-    err "Topic name must contain only letters, numbers, hyphens, and underscores."
-    exit 1
+ntfy_topic=""
+enable_ntfy=false
+if [[ "$enable_ntfy_input" =~ ^[Yy]$ ]]; then
+    enable_ntfy=true
+    if command -v xxd &>/dev/null; then
+        random_suffix=$(head -c 4 /dev/urandom | xxd -p)
+    else
+        random_suffix=$(python3 -c 'import secrets; print(secrets.token_hex(4))')
+    fi
+    default_topic="voxhook-${random_suffix}"
+    read -rp "$(echo -e "${CYAN}Topic name${NC} [${default_topic}]: ")" ntfy_topic
+    ntfy_topic="${ntfy_topic:-$default_topic}"
+
+    # Sanitize topic: only allow alphanumeric, hyphens, underscores
+    if [[ ! "$ntfy_topic" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        err "Topic name must contain only letters, numbers, hyphens, and underscores."
+        exit 1
+    fi
+    ok "Notifications enabled (topic: ${ntfy_topic})"
 fi
 
 # ── TTS voice mode ──────────────────────────────────────────────────────────
@@ -234,8 +249,9 @@ mkdir -p "$INSTALL_DIR/tts/cache"
 
 # Write config for the chosen mode
 if [[ "$enable_tts" == true ]]; then
+    ntfy_enabled_json="$( [[ "$enable_ntfy" == true ]] && echo true || echo false )"
     if [[ "$tts_engine" == "piper" ]]; then
-        cat > "$INSTALL_DIR/tts/config.json" << 'EOF'
+        cat > "$INSTALL_DIR/tts/config.json" << EOF
 {
   "volume": 0.6,
   "playback_speed": 1.0,
@@ -244,12 +260,12 @@ if [[ "$enable_tts" == true ]]; then
   "dynamic_tts": true,
   "enabled": true,
   "sound_enabled": true,
-  "ntfy_enabled": true,
+  "ntfy_enabled": ${ntfy_enabled_json},
   "suppress_delegate_mode": true
 }
 EOF
     else
-        cat > "$INSTALL_DIR/tts/config.json" << 'EOF'
+        cat > "$INSTALL_DIR/tts/config.json" << EOF
 {
   "volume": 0.6,
   "playback_speed": 1.0,
@@ -257,7 +273,7 @@ EOF
   "dynamic_tts": false,
   "enabled": true,
   "sound_enabled": true,
-  "ntfy_enabled": true,
+  "ntfy_enabled": ${ntfy_enabled_json},
   "suppress_delegate_mode": true
 }
 EOF
@@ -271,14 +287,15 @@ ok "Files installed."
 info "Configuring Claude Code hooks..."
 
 # Use inline Python for safe JSON manipulation
-VOXHOOK_TOPIC="$ntfy_topic" VOXHOOK_TTS="$enable_tts" python3 << 'PYEOF'
+VOXHOOK_TOPIC="$ntfy_topic" VOXHOOK_TTS="$enable_tts" VOXHOOK_NTFY="$enable_ntfy" python3 << 'PYEOF'
 import json
 import os
 import sys
 from pathlib import Path
 
-ntfy_topic = os.environ["VOXHOOK_TOPIC"]
+ntfy_topic = os.environ.get("VOXHOOK_TOPIC", "")
 enable_tts = os.environ.get("VOXHOOK_TTS", "false") == "true"
+enable_ntfy = os.environ.get("VOXHOOK_NTFY", "false") == "true"
 
 settings_path = Path(os.path.expanduser("~/.claude/settings.json"))
 
@@ -312,27 +329,32 @@ def remove_voxhook_entries(entries):
 stop_hooks = hooks.setdefault("Stop", [])
 stop_hooks[:] = remove_voxhook_entries(stop_hooks)
 
-# Push notification hook (Stop) - always added
-stop_hooks.append({
-    "hooks": [{
-        "type": "command",
-        "command": f"nohup uv run ~/.claude/hooks/voxhook/notify/handler.py --topic={ntfy_topic} &"
-    }]
-})
+notif_hooks = hooks.setdefault("Notification", [])
+notif_hooks[:] = remove_voxhook_entries(notif_hooks)
 
-if enable_tts:
-    # TTS hook (Stop)
+# Push notification hook (Stop + Notification)
+if enable_ntfy and ntfy_topic:
     stop_hooks.append({
         "hooks": [{
             "type": "command",
-            "command": f"uv run ~/.claude/hooks/voxhook/tts/handler.py --ntfy-topic={ntfy_topic}",
+            "command": f"nohup uv run ~/.claude/hooks/voxhook/notify/handler.py --topic={ntfy_topic} &"
+        }]
+    })
+
+if enable_tts:
+    # TTS hook (Stop) — pass ntfy topic only if ntfy is enabled
+    tts_stop_cmd = "uv run ~/.claude/hooks/voxhook/tts/handler.py"
+    if enable_ntfy and ntfy_topic:
+        tts_stop_cmd += f" --ntfy-topic={ntfy_topic}"
+    stop_hooks.append({
+        "hooks": [{
+            "type": "command",
+            "command": tts_stop_cmd,
             "timeout": 10
         }]
     })
 
     # TTS hook (Notification)
-    notif_hooks = hooks.setdefault("Notification", [])
-    notif_hooks[:] = remove_voxhook_entries(notif_hooks)
     notif_hooks.append({
         "hooks": [{
             "type": "command",
@@ -388,8 +410,10 @@ fi
 echo ""
 echo -e "${GREEN}${BOLD}Voxhook installed successfully!${NC}"
 echo ""
-echo -e "  ${BOLD}ntfy.sh topic:${NC}  ${ntfy_topic}"
-echo -e "  ${BOLD}Subscribe:${NC}      https://ntfy.sh/${ntfy_topic}"
+if [[ "$enable_ntfy" == true ]]; then
+    echo -e "  ${BOLD}ntfy.sh topic:${NC}  ${ntfy_topic}"
+    echo -e "  ${BOLD}Subscribe:${NC}      https://ntfy.sh/${ntfy_topic}"
+fi
 if [[ "$enable_tts" == true ]]; then
     echo -e "  ${BOLD}TTS engine:${NC}     ${tts_engine}"
     if [[ "$use_dynamic" == true ]]; then
@@ -398,10 +422,12 @@ if [[ "$enable_tts" == true ]]; then
 fi
 echo -e "  ${BOLD}Install path:${NC}   ${INSTALL_DIR}"
 echo ""
-echo "  To receive push notifications, subscribe to your topic:"
-echo "    - Web:     https://ntfy.sh/${ntfy_topic}"
-echo "    - iOS/Android: Install ntfy app, subscribe to '${ntfy_topic}'"
-echo ""
+if [[ "$enable_ntfy" == true ]]; then
+    echo "  To receive push notifications, subscribe to your topic:"
+    echo "    - Web:     https://ntfy.sh/${ntfy_topic}"
+    echo "    - iOS/Android: Install ntfy app, subscribe to '${ntfy_topic}'"
+    echo ""
+fi
 if [[ "$enable_tts" == true ]]; then
     echo "  TTS will play audio notifications when Claude Code completes tasks."
     echo "  Edit ${INSTALL_DIR}/tts/config.json to adjust volume and settings."
