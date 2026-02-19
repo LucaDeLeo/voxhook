@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Voxhook Installer
-# Installs push notifications + TTS voice cloning for Claude Code
+# Push notifications + TTS for Claude Code
 
 INSTALL_DIR="$HOME/.claude/hooks/voxhook"
 SETTINGS_FILE="$HOME/.claude/settings.json"
@@ -97,58 +97,100 @@ if [[ ! "$ntfy_topic" =~ ^[a-zA-Z0-9_-]+$ ]]; then
     exit 1
 fi
 
-# TTS setup
+# ── TTS voice mode ──────────────────────────────────────────────────────────
 echo ""
-echo -e "${BOLD}TTS Voice Cloning (optional)${NC}"
-echo "  Requires a reference .wav file of the voice you want to clone."
-echo "  Skip this for push-notification-only mode."
-echo ""
-read -rp "$(echo -e "${CYAN}Path to reference voice WAV${NC} (leave empty to skip): ")" voice_path
+echo -e "${BOLD}TTS Voice Mode:${NC}"
+echo "  1) GLaDOS (recommended) — sardonic AI commentary on what Claude did"
+echo "  2) Custom voice          — clone any voice from a reference WAV (Chatterbox)"
+echo "  3) None                  — push notifications only"
+read -rp "$(echo -e "${CYAN}Choice${NC} [1]: ")" tts_choice
+tts_choice="${tts_choice:-1}"
 
 enable_tts=false
-if [[ -n "$voice_path" ]]; then
-    voice_path="${voice_path/#\~/$HOME}"
-    if [[ -f "$voice_path" ]]; then
+tts_engine=""
+use_dynamic=false
+template_file=""
+voice_path=""
+
+case "$tts_choice" in
+    1)
+        # ── GLaDOS mode ─────────────────────────────────────────────────
         enable_tts=true
-        ok "Voice file found: ${voice_path}"
-    else
-        err "File not found: ${voice_path}"
-        read -rp "Continue without TTS? [Y/n] " cont
-        if [[ "$cont" == "n" || "$cont" == "N" ]]; then
+        tts_engine="piper"
+        use_dynamic=true
+        template_file="${SOURCE_DIR}/templates/glados.json"
+
+        # Check that the ONNX model exists in the repo
+        if [[ ! -f "${SOURCE_DIR}/models/glados/glados_piper_medium.onnx" ]]; then
+            err "GLaDOS model not found at models/glados/glados_piper_medium.onnx"
+            err "Make sure you cloned the repo with the model files."
             exit 1
         fi
-    fi
-fi
+        ok "GLaDOS mode selected."
+        ;;
+    2)
+        # ── Custom voice (Chatterbox) ───────────────────────────────────
+        enable_tts=true
+        tts_engine="chatterbox"
+        use_dynamic=false
 
-# Template selection
-template_file="${SOURCE_DIR}/templates/default.json"
-if [[ "$enable_tts" == true ]]; then
-    echo ""
-    echo -e "${BOLD}Message template preset:${NC}"
-    echo "  1) default   - Neutral professional tone"
-    echo "  2) abathur   - Evolutionary/clinical Abathur style"
-    echo "  3) custom    - Provide your own JSON file"
-    read -rp "$(echo -e "${CYAN}Choice${NC} [1]: ")" template_choice
-    template_choice="${template_choice:-1}"
+        echo ""
+        echo -e "${BOLD}Custom Voice Setup${NC}"
+        echo "  Requires a reference .wav file (5-30 seconds of clear speech)."
+        echo ""
+        read -rp "$(echo -e "${CYAN}Path to reference voice WAV${NC}: ")" voice_path
 
-    case "$template_choice" in
-        2)
-            template_file="${SOURCE_DIR}/templates/abathur.json"
-            ;;
-        3)
-            read -rp "Path to custom templates JSON: " custom_template
-            custom_template="${custom_template/#\~/$HOME}"
-            if [[ -f "$custom_template" ]]; then
-                template_file="$custom_template"
-            else
-                warn "File not found, using default template."
+        voice_path="${voice_path/#\~/$HOME}"
+        if [[ -z "$voice_path" || ! -f "$voice_path" ]]; then
+            err "File not found: ${voice_path:-<empty>}"
+            read -rp "Continue without TTS? [Y/n] " cont
+            if [[ "$cont" == "n" || "$cont" == "N" ]]; then
+                exit 1
             fi
-            ;;
-        *)
-            template_file="${SOURCE_DIR}/templates/default.json"
-            ;;
-    esac
-fi
+            enable_tts=false
+        else
+            ok "Voice file found: ${voice_path}"
+        fi
+
+        # Template selection (only for Chatterbox)
+        if [[ "$enable_tts" == true ]]; then
+            echo ""
+            echo -e "${BOLD}Message template preset:${NC}"
+            echo "  1) default         - Neutral professional tone"
+            echo "  2) abathur         - Evolutionary/clinical Abathur style"
+            echo "  3) glados          - Sardonic GLaDOS tone"
+            echo "  4) reptilian-brain - Primal urgency"
+            echo "  5) custom          - Provide your own JSON file"
+            read -rp "$(echo -e "${CYAN}Choice${NC} [1]: ")" template_choice
+            template_choice="${template_choice:-1}"
+
+            case "$template_choice" in
+                2) template_file="${SOURCE_DIR}/templates/abathur.json" ;;
+                3) template_file="${SOURCE_DIR}/templates/glados.json" ;;
+                4) template_file="${SOURCE_DIR}/templates/reptilian-brain.json" ;;
+                5)
+                    read -rp "Path to custom templates JSON: " custom_template
+                    custom_template="${custom_template/#\~/$HOME}"
+                    if [[ -f "$custom_template" ]]; then
+                        template_file="$custom_template"
+                    else
+                        warn "File not found, using default template."
+                        template_file="${SOURCE_DIR}/templates/default.json"
+                    fi
+                    ;;
+                *) template_file="${SOURCE_DIR}/templates/default.json" ;;
+            esac
+        fi
+        ;;
+    3)
+        # ── No TTS ──────────────────────────────────────────────────────
+        ok "Push notifications only."
+        ;;
+    *)
+        err "Invalid choice: ${tts_choice}"
+        exit 1
+        ;;
+esac
 
 # ── Install files ────────────────────────────────────────────────────────────
 echo ""
@@ -167,19 +209,60 @@ cp -R "${SOURCE_DIR}/hooks/notify" "$INSTALL_DIR/notify"
 cp -R "${SOURCE_DIR}/hooks/tts"    "$INSTALL_DIR/tts"
 
 # Copy selected template
-if [[ "$enable_tts" == true ]]; then
+if [[ "$enable_tts" == true && -n "$template_file" ]]; then
     cp "$template_file" "$INSTALL_DIR/tts/templates.json"
 fi
 
-# Copy reference voice
-if [[ "$enable_tts" == true ]]; then
+# Copy reference voice (Chatterbox only)
+if [[ "$enable_tts" == true && -n "$voice_path" && -f "$voice_path" ]]; then
     mkdir -p "$INSTALL_DIR/tts/reference"
     cp "$voice_path" "$INSTALL_DIR/tts/reference/voice.wav"
     ok "Voice file copied."
 fi
 
+# Copy GLaDOS model (Piper mode)
+if [[ "$tts_engine" == "piper" ]]; then
+    mkdir -p "$INSTALL_DIR/tts/models/glados"
+    cp "${SOURCE_DIR}/models/glados/glados_piper_medium.onnx" "$INSTALL_DIR/tts/models/glados/"
+    cp "${SOURCE_DIR}/models/glados/glados_piper_medium.onnx.json" "$INSTALL_DIR/tts/models/glados/"
+    ok "GLaDOS model installed."
+fi
+
 # Create cache directory
 mkdir -p "$INSTALL_DIR/tts/cache"
+
+# Write config for the chosen mode
+if [[ "$enable_tts" == true ]]; then
+    if [[ "$tts_engine" == "piper" ]]; then
+        cat > "$INSTALL_DIR/tts/config.json" << 'EOF'
+{
+  "volume": 0.6,
+  "playback_speed": 1.0,
+  "tts_engine": "piper",
+  "piper_model": "models/glados/glados_piper_medium.onnx",
+  "dynamic_tts": true,
+  "enabled": true,
+  "sound_enabled": true,
+  "ntfy_enabled": true,
+  "suppress_delegate_mode": true
+}
+EOF
+    else
+        cat > "$INSTALL_DIR/tts/config.json" << 'EOF'
+{
+  "volume": 0.6,
+  "playback_speed": 1.0,
+  "tts_engine": "chatterbox",
+  "dynamic_tts": false,
+  "enabled": true,
+  "sound_enabled": true,
+  "ntfy_enabled": true,
+  "suppress_delegate_mode": true
+}
+EOF
+    fi
+    ok "Config written."
+fi
 
 ok "Files installed."
 
@@ -263,18 +346,40 @@ PYEOF
 
 ok "Hooks configured."
 
-# ── Optional pre-generation ──────────────────────────────────────────────────
+# ── Pre-generation + smoke test ──────────────────────────────────────────────
 if [[ "$enable_tts" == true ]]; then
-    echo ""
-    echo -e "${BOLD}Pre-generate TTS audio cache?${NC}"
-    echo "  This generates WAV files for all template messages upfront."
-    echo "  Takes a few minutes but ensures instant playback from the start."
-    read -rp "$(echo -e "${CYAN}Pre-generate?${NC} [y/N]: ")" pregen
-    if [[ "$pregen" == "y" || "$pregen" == "Y" ]]; then
-        info "Starting pre-generation (this will take a while)..."
-        uv run --python 3.11 "$INSTALL_DIR/tts/generate.py" --pre-generate || {
+    if [[ "$tts_engine" == "piper" ]]; then
+        # Piper is fast (~5s total), always pre-generate
+        echo ""
+        info "Pre-generating TTS audio cache (Piper — this is quick)..."
+        if uv run --python 3.11 "$INSTALL_DIR/tts/generate_piper.py" --pre-generate; then
+            ok "Audio cache ready."
+
+            # Smoke test: play a random cached WAV
+            sample_wav=$(find "$INSTALL_DIR/tts/cache" -name '*.wav' -type f 2>/dev/null | head -1)
+            if [[ -n "$sample_wav" ]]; then
+                echo ""
+                info "Playing smoke test..."
+                afplay -v 0.6 "$sample_wav" &
+                wait $!
+                ok "Audio working!"
+            fi
+        else
             warn "Pre-generation had errors. TTS will generate on-demand instead."
-        }
+        fi
+    else
+        # Chatterbox: optional, takes minutes
+        echo ""
+        echo -e "${BOLD}Pre-generate TTS audio cache?${NC}"
+        echo "  This generates WAV files for all template messages upfront."
+        echo "  Takes a few minutes but ensures instant playback from the start."
+        read -rp "$(echo -e "${CYAN}Pre-generate?${NC} [y/N]: ")" pregen
+        if [[ "$pregen" == "y" || "$pregen" == "Y" ]]; then
+            info "Starting pre-generation (this will take a while)..."
+            uv run --python 3.11 "$INSTALL_DIR/tts/generate.py" --pre-generate || {
+                warn "Pre-generation had errors. TTS will generate on-demand instead."
+            }
+        fi
     fi
 fi
 
@@ -284,7 +389,12 @@ echo -e "${GREEN}${BOLD}Voxhook installed successfully!${NC}"
 echo ""
 echo -e "  ${BOLD}ntfy.sh topic:${NC}  ${ntfy_topic}"
 echo -e "  ${BOLD}Subscribe:${NC}      https://ntfy.sh/${ntfy_topic}"
-echo -e "  ${BOLD}TTS enabled:${NC}    ${enable_tts}"
+if [[ "$enable_tts" == true ]]; then
+    echo -e "  ${BOLD}TTS engine:${NC}     ${tts_engine}"
+    if [[ "$use_dynamic" == true ]]; then
+        echo -e "  ${BOLD}Dynamic TTS:${NC}    enabled (GLaDOS commentary via Agent SDK)"
+    fi
+fi
 echo -e "  ${BOLD}Install path:${NC}   ${INSTALL_DIR}"
 echo ""
 echo "  To receive push notifications, subscribe to your topic:"
