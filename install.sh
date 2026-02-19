@@ -208,8 +208,9 @@ cp -R "${SOURCE_DIR}/hooks/common" "$INSTALL_DIR/common"
 cp -R "${SOURCE_DIR}/hooks/notify" "$INSTALL_DIR/notify"
 cp -R "${SOURCE_DIR}/hooks/tts"    "$INSTALL_DIR/tts"
 
-# Copy selected template
+# Copy selected template (remove first — source tts/ may contain a symlink)
 if [[ "$enable_tts" == true && -n "$template_file" ]]; then
+    rm -f "$INSTALL_DIR/tts/templates.json"
     cp "$template_file" "$INSTALL_DIR/tts/templates.json"
 fi
 
