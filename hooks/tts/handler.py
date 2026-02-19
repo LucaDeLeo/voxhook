@@ -243,17 +243,18 @@ def main() -> None:
     # Build the ntfy text (include project name for context)
     ntfy_text = f"{project_name}: {text}" if project_name else text
 
-    # Dynamic TTS: spawn GLaDOS commentary on what Claude actually did
+    # Dynamic TTS: spawn GLaDOS to generate a contextual quip.
     # When dynamic TTS fires, skip the template audio — gladosify handles
     # everything (including the project name) so we don't double-play.
     use_dynamic = (
-        event_type == "Stop"
-        and config.get("dynamic_tts", False)
+        config.get("dynamic_tts", False)
         and config.get("tts_engine") == "piper"
-        and input_data.get("last_assistant_message")
     )
 
     if use_dynamic:
+        # Pass notification sub-type so gladosify can tailor its response
+        if notification_type:
+            input_data["notification_type"] = notification_type
         spawn_gladosify(input_data)
     elif config.get("sound_enabled", True):
         volume = config.get("volume", 0.6)

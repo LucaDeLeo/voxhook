@@ -9,6 +9,8 @@ dist/
 build/
 .env
 .idle_cooldown
+.glados_history.json
+.glados_history.tmp
 
 # Personal media / test files (don't commit to repo)
 *.webm

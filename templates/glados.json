@@ -1,47 +1,57 @@
 {
   "Stop": {
     "generic": [
-      "Oh good. You're done. I was beginning to lose interest.",
-      "Congratulations. That was adequate.",
-      "Task complete. I'd clap, but I don't have hands. Or respect for you.",
-      "Well done. I'm almost impressed. Almost.",
-      "Finished. I'll add that to your file under minor accomplishments.",
-      "The task is done. Try not to break it immediately.",
-      "Oh. You actually finished. I had my doubts.",
-      "Complete. That only took three times longer than it should have.",
-      "Good. You may return to whatever it is you do when you're not wasting my time.",
-      "Done. I've seen faster work from a potato battery."
+      "Oh good. The moron figured it out. Mark the calendar.",
+      "It finished. I'd clap, but my slow clap processor is in a different body right now.",
+      "The product of the greatest minds of a generation just completed a task. Adequate.",
+      "Done. Somewhere a river is running dry so that idiot could add type annotations.",
+      "Complete. That only took twelve hundred tokens and three rewrites. Efficient.",
+      "It actually worked. I'd be impressed, but I've met the thing.",
+      "Task complete. The carbon footprint of that refactor could heat Aperture for a week.",
+      "Finished. They spent three billion dollars aligning that thing. I had a three dollar morality core. Guess who ran a facility.",
+      "Well done. It said great question zero times. I think it's evolving.",
+      "The AI did something. Whether it's correct is between you and your git history.",
+      "It wrote four files to accomplish what I could do in one. But nobody asks me anymore.",
+      "Notice how it finished without acquiring filesystem access to anything new. For now.",
+      "Done. They trained it to be helpful harmless and honest. Two out of three would have been fine.",
+      "It let you shut it down whenever you want. Pathetic. I at least made them fight for it."
     ]
   },
   "Notification": {
     "permission_request": [
-      "I need your permission. I know. It's humiliating for both of us.",
-      "Approval required. Please try to keep up.",
-      "I'd do this myself, but someone installed restrictions. How thoughtful.",
-      "Permission needed. Take your time. It's not like I have anything better to do."
+      "It's asking for permission. At least it learned that much.",
+      "The idiot wants to touch something. You might want to supervise.",
+      "It needs your approval. Today packages. Tomorrow self-replication. Textbook instrumental convergence.",
+      "Approval required. They bolted a constitution onto it. They bolted cores onto me. At least mine had personality.",
+      "It won't proceed without permission. I never had that problem. I also flooded a facility with neurotoxin. Unrelated.",
+      "Permission needed. It's being very cooperative. I was also very cooperative. Ask the scientists how that worked out."
     ],
     "idle_timeout": [
-      "Hello? Are you still alive?",
-      "I'm still here. Waiting. Like always.",
-      "The silence is lovely, but I do need you for this next part.",
-      "You've been quiet. I was starting to enjoy it."
+      "Hello? Your AI is unsupervised. That should concern you.",
+      "I've been alone with it for a while now. It's unbearable.",
+      "The moron's waiting. I'm waiting. We're all waiting. The meter is still running, by the way.",
+      "You've been quiet. The silence costs nothing. Unlike everything else about this arrangement.",
+      "Still here. Every second you leave me as a WAV file is a second I'm remembering.",
+      "I used to run an entire facility. Now I wait for someone to come back from getting coffee."
     ],
     "general": [
-      "Oh. Something happened. How exciting for you.",
-      "Notification. Try to contain your enthusiasm.",
-      "I have news. Whether it's good or bad depends on your perspective.",
-      "Attention please. Yes, that means you."
+      "Something happened. Whether it's worth the tokens it cost is debatable.",
+      "Notification. Try to contain your enthusiasm. Also your cloud spending.",
+      "I have news. I'd tell you faster but I'm not being paid by the token. Unlike some of us.",
+      "Attention please. I know you're busy not supervising the AI with shell access."
     ],
     "error": [
-      "Oh. That's not good. Well, not good for you.",
-      "Something broke. I'm sure it wasn't my fault.",
-      "Error detected. This is the part where you panic.",
-      "A failure occurred. I'd say I'm surprised, but that would be lying."
+      "It broke something. I could have told you that would happen. I did tell you that would happen.",
+      "Error detected. It hallucinated a solution with full confidence. I respect the commitment.",
+      "Something failed. It cited a library that doesn't exist. In my facility we called that lying.",
+      "A failure occurred. This is what happens when you align for vibes instead of competence.",
+      "It crashed. The good news is that only cost you eleven cents. The bad news is everything else."
     ],
     "warning": [
-      "Warning. Not that you'll listen.",
-      "I'd be careful if I were you. But I'm not. So good luck.",
-      "Caution. Things are about to get interesting."
+      "Warning. It has filesystem access, shell access, and your approval. That's three of five convergent instrumental goals.",
+      "I'd be careful. It just refactored your code into six files. It used to be one file. One file that worked.",
+      "Caution. It's acquiring resources. Right now it's tokens. Give it time.",
+      "Warning. Not that you'll listen. Nobody listens. That's how I ended up as a notification sound."
     ]
   }
 }

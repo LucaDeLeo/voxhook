@@ -11,10 +11,19 @@ Voxhook is a Claude Code hooks plugin providing push notifications (via ntfy.sh)
 Two independent hook handlers, both triggered by Claude Code hook events (JSON on stdin):
 
 **TTS handler** (`hooks/tts/handler.py`) — fast path, <300ms target:
-- Reads hook JSON, picks random message from templates, plays cached WAV via `afplay`
-- On cache miss: plays any fallback WAV, spawns `generate.py` in background to warm cache
+- Reads hook JSON, delegates to dynamic TTS (gladosify) or picks from cached templates
+- When dynamic TTS is enabled, all event types (Stop, idle, permission, error, warning) go through gladosify
+- On cache miss: plays any fallback WAV, spawns generator in background to warm cache
 - For Stop events: sequences project name WAV + message WAV back-to-back
 - Never imports torch/chatterbox — keeps startup fast
+
+**Dynamic GLaDOS** (`hooks/tts/gladosify.py`) — contextual commentary:
+- Calls Haiku via Agent SDK to generate a GLaDOS-style one-liner reacting to what Claude did
+- Maintains a rolling history of last 20 responses (`.glados_history.json`) for continuity
+- Builds different input prompts per event type (Stop gets Claude's message, idle/permission/error get contextual framing)
+- History is global across projects; GLaDOS sees what she said before and avoids repetition
+- Persona: GLaDOS as sidelined observer, Claude as Wheatley, developer as test subject
+- Themes: AI safety/alignment humor, token cost jokes, Portal lore, personal bitterness
 
 **TTS generator** (`hooks/tts/generate.py`) — heavy path:
 - Loads Chatterbox model (MPS > CUDA > CPU), clones reference voice
@@ -36,6 +45,11 @@ Two independent hook handlers, both triggered by Claude Code hook events (JSON o
 - SHA-256 hash-indexed WAV cache with JSON index file (`cache/_index.json`)
 - LRU eviction at 500 entries, atomic index writes via temp file + rename
 
+**GLaDOS templates** (`templates/glados.json`):
+- Static fallback templates used when dynamic TTS is off or fails
+- Framed as GLaDOS commenting on Claude (Wheatley) from the sidelines
+- Weaves in AI safety concepts, token cost jokes, and Portal references
+
 ## Key Patterns
 
 - All handlers use `uv` inline script metadata (`# /// script`) for dependency declaration — no requirements.txt or pyproject.toml
@@ -43,6 +57,7 @@ Two independent hook handlers, both triggered by Claude Code hook events (JSON o
 - Background work (cache warming, ntfy POST) uses `subprocess.Popen` with stdin pipes passing JSON payloads to avoid shell injection
 - Idle notifications have a 5-minute cooldown persisted to `.idle_cooldown` file
 - Delegate/agent sub-sessions are suppressed by default (`suppress_delegate_mode`)
+- Dynamic TTS history persisted to `.glados_history.json` (last 20 entries, global across projects, atomic writes)
 
 ## Running and Testing
 
