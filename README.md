@@ -7,6 +7,12 @@ Get notified when Claude finishes a task — via your phone (ntfy.sh) and/or a G
 ## Quick install
 
 ```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/LucaDeLeo/voxhook/main/get.sh)
+```
+
+Or clone and run manually:
+
+```bash
 git clone https://github.com/LucaDeLeo/voxhook.git
 cd voxhook
 ./install.sh
