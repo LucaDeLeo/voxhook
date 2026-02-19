@@ -42,6 +42,7 @@ IDLE_COOLDOWN_SECONDS = 300  # 5 minutes
 sys.path.insert(0, str(SCRIPT_DIR.parent))
 sys.path.insert(0, str(SCRIPT_DIR))
 
+from common.awareness import detect_awareness, AwarenessTier
 from message_templates import get_message, message_hash
 from audio_queue import audio_lock
 import cache_manager
@@ -237,6 +238,11 @@ def main() -> None:
                 sys.exit(0)
             mark_idle_cooldown()
 
+    # Awareness-based notification tiering
+    tier = detect_awareness(config, project_name)
+    should_tts = tier is None or tier == AwarenessTier.NEARBY
+    should_push = tier is None or tier == AwarenessTier.AWAY
+
     # Select message (never project-templated)
     text = get_message(event_type, project_name=None, notification_type=notification_type)
 
@@ -251,12 +257,12 @@ def main() -> None:
         and config.get("tts_engine") == "piper"
     )
 
-    if use_dynamic:
+    if use_dynamic and should_tts:
         # Pass notification sub-type so gladosify can tailor its response
         if notification_type:
             input_data["notification_type"] = notification_type
         spawn_gladosify(input_data)
-    elif config.get("sound_enabled", True):
+    elif should_tts and config.get("sound_enabled", True):
         volume = config.get("volume", 0.6)
         speed = config.get("playback_speed", 1.0)
 
@@ -294,7 +300,7 @@ def main() -> None:
 
     # Send ntfy push notification
     ntfy_topic = args.ntfy_topic
-    if ntfy_topic and config.get("ntfy_enabled", True):
+    if ntfy_topic and should_push and config.get("ntfy_enabled", True):
         server = config.get("ntfy_server", "https://ntfy.sh")
         priority = config.get("ntfy_priority", 3)
         tags = config.get("ntfy_tags", "brain")

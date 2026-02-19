@@ -30,6 +30,9 @@ from .enums import (
     STANDALONE_EVENTS,
 )
 
+# Import awareness detection
+from .awareness import AwarenessTier, detect_awareness
+
 # Import utility functions
 from .utils import (
     safe_enum_from_string,
@@ -48,6 +51,9 @@ from .utils import (
 )
 
 __all__ = [
+    # Awareness
+    "AwarenessTier",
+    "detect_awareness",
     # Enums
     "HookEvent",
     "ToolName",

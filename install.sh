@@ -261,7 +261,12 @@ if [[ "$enable_tts" == true ]]; then
   "enabled": true,
   "sound_enabled": true,
   "ntfy_enabled": ${ntfy_enabled_json},
-  "suppress_delegate_mode": true
+  "suppress_delegate_mode": true,
+  "awareness": {
+    "enabled": true,
+    "terminal_apps": ["Terminal", "iTerm2", "Ghostty", "Alacritty", "kitty", "WezTerm", "Warp", "stable"],
+    "idle_threshold_seconds": 300
+  }
 }
 EOF
     else
@@ -274,7 +279,12 @@ EOF
   "enabled": true,
   "sound_enabled": true,
   "ntfy_enabled": ${ntfy_enabled_json},
-  "suppress_delegate_mode": true
+  "suppress_delegate_mode": true,
+  "awareness": {
+    "enabled": true,
+    "terminal_apps": ["Terminal", "iTerm2", "Ghostty", "Alacritty", "kitty", "WezTerm", "Warp", "stable"],
+    "idle_threshold_seconds": 300
+  }
 }
 EOF
     fi

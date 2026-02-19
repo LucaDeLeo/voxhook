@@ -15,5 +15,10 @@
   "enabled": true,
   "sound_enabled": true,
   "ntfy_enabled": true,
-  "suppress_delegate_mode": true
+  "suppress_delegate_mode": true,
+  "awareness": {
+    "enabled": true,
+    "terminal_apps": ["Terminal", "iTerm2", "Ghostty", "Alacritty", "kitty", "WezTerm", "Warp", "stable"],
+    "idle_threshold_seconds": 300
+  }
 }
