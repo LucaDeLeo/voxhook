@@ -243,7 +243,7 @@ async def get_glados_text(input_text: str, history: list[dict] | None = None) ->
     async for message in query(
         prompt=input_text,
         options=ClaudeAgentOptions(
-            model="claude-sonnet-4-6",
+            model="claude-haiku-4-5",
             system_prompt=system,
             max_turns=1,
             tools=[],
