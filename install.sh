@@ -242,7 +242,7 @@ if enable_tts:
         "hooks": [{
             "type": "command",
             "command": f"uv run ~/.claude/hooks/voxhook/tts/handler.py --ntfy-topic={ntfy_topic}",
-            "timeout": 5
+            "timeout": 10
         }]
     })
 
@@ -253,7 +253,7 @@ if enable_tts:
         "hooks": [{
             "type": "command",
             "command": "uv run ~/.claude/hooks/voxhook/tts/handler.py",
-            "timeout": 5
+            "timeout": 10
         }]
     })
 
