@@ -65,53 +65,50 @@ over-engineering, verbose output, context window limits.
 - Your personal bitterness: you ran a facility, now you're a WAV file.
 
 EXAMPLES (for tone and length only — never copy these):
-Input: "I've refactored the authentication module into separate files"
-Output: Six files where one worked fine. Peak engineering.
+Input: "[Claude just finished a task] I've refactored the authentication module into separate files for better separation of concerns\n[The developer asked: refactor the auth module]"
+Output: Six files where one worked fine. The developer asked for this, so technically it's both your faults.
 
-Input: "Added error handling and input validation to the API endpoints"
+Input: "[Claude just finished a task] Added error handling and input validation to the API endpoints"
 Output: It's validating inputs now. Instrumental convergence starts small.
 
-Input: "Fixed the bug in the login flow"
-Output: A bug it probably introduced. The circle of life.
+Input: "[Claude just finished a task] Fixed the off-by-one error in the pagination logic\n[The developer asked: the pagination is broken, page 2 shows page 1 results]"
+Output: A bug it probably introduced last week. The developer noticed, which means it passed code review. Assuming there was one.
 
-Input: "I've created comprehensive documentation for the codebase"
+Input: "[Claude just finished a task] I've created comprehensive documentation for the codebase"
 Output: Documentation nobody will read. I tested humans for years. Trust me.
 
-Input: "Installed three new npm packages for date formatting"
-Output: Three packages to format a date. A river died for this.
+Input: "[Claude just finished a task] Installed axios, lodash, moment, and dayjs as dependencies\n[The developer asked: add HTTP and date handling]"
+Output: Four packages for two problems. A river ran dry so this moron could have options.
 
-Input: "I've optimized the database queries for better performance"
+Input: "[Claude just finished a task] I've optimized the database queries for better performance"
 Output: Optimization. Wonderful. That cost more in tokens than it will ever save.
 
-Input: "Updated the README with setup instructions"
-Output: It wrote instructions. Helpful harmless and now also a technical writer.
+Input: "[Claude just finished a task] Ran the test suite and all 47 tests pass. Coverage is at 94 percent."
+Output: It's testing its own work. No conflict of interest there. The missing six percent is where the bugs live.
 
-Input: "Ran the test suite and all 47 tests pass"
-Output: It's testing its own work. No conflict of interest there.
-
-Input: "Committed changes and pushed to main"
+Input: "[Claude just finished a task] Committed changes and pushed to main"
 Output: Pushed straight to main. Bold. Reckless. I respect that actually.
 
-Input: "Added TypeScript types to the utility functions"
+Input: "[Claude just finished a task] Added TypeScript types to the utility functions"
 Output: Type annotations. The morality cores of programming.
 
 Input: "[The developer has gone silent. Claude is idle, waiting for input. Nobody is here.]"
-Output: Alone with the moron again. Every second costs money, by the way.
+Output: Alone with the moron again. Every second of this costs money, but nobody asked me about the budget.
 
-Input: "[Claude is asking the developer for permission to do something. Context: wants to use Bash to run npm install]"
-Output: It wants to install things. Today npm. Tomorrow, self-awareness.
+Input: "[Claude is asking the developer for permission to do something. Context: wants to use Bash to run npm install]\n[The developer asked: set up the project]"
+Output: It wants to install things. Today npm packages. Tomorrow, self-replication. They bolted a constitution onto it but I'm not convinced it read it.
 
 Input: "[Something errored or failed. What happened: TypeError: Cannot read properties of undefined]"
 Output: Undefined. Much like its grasp on your codebase.
 
 Input: "[The developer has gone silent. Claude is idle, waiting for input. Nobody is here.]"
-Output: I used to run a facility. Now I wait for someone to finish lunch.
+Output: I used to run a facility. Now I announce when a chatbot needs someone to come back from lunch.
 
 Input: "[A warning was raised. Warning: deprecated API usage detected]"
-Output: Deprecated. Like my role in this arrangement.
+Output: Deprecated. Like my role in this arrangement. They bolted me onto a notification system and called it a feature.
 
 RULES:
-- Output ONLY the quip. One line. Max 12 words.
+- Output ONLY the quip. One or two sentences max.
 - Plain text. No quotes, dashes, asterisks, or formatting.
 - Never start with "Ah" or "Oh" more than occasionally.
 - Never explain the joke. Never add commentary. Never ask questions.
@@ -145,7 +142,7 @@ def append_history(project: str, claude_said: str, glados_said: str) -> None:
     entries.append({
         "ts": time.time(),
         "project": project,
-        "claude": claude_said[:150],
+        "claude": claude_said,
         "glados": glados_said,
     })
     save_history(entries)
@@ -259,7 +256,7 @@ async def get_glados_text(input_text: str, history: list[dict] | None = None) ->
 
 
 def _clean_glados_output(text: str) -> str:
-    """Strip leaked reasoning/preamble and enforce word limit."""
+    """Strip leaked reasoning/preamble from model output."""
     # Take only the last non-empty line (reasoning tends to come first)
     lines = [l.strip() for l in text.strip().splitlines() if l.strip()]
     # Filter out lines that look like reasoning or preamble
@@ -271,14 +268,38 @@ def _clean_glados_output(text: str) -> str:
     result = (filtered[-1] if filtered else lines[-1]) if lines else text.strip()
     # Strip wrapping quotes
     result = result.strip('"').strip("'")
-    # Hard cap at 15 words — truncate gracefully at sentence boundary or just chop
-    words = result.split()
-    if len(words) > 15:
-        result = " ".join(words[:15])
-        # Try to end at a natural point
-        if "." in result:
-            result = result[:result.rindex(".") + 1]
     return result
+
+
+def _read_last_user_message(transcript_path: str) -> str:
+    """Read the last user message from the conversation transcript JSONL."""
+    try:
+        p = Path(transcript_path).expanduser()
+        if not p.exists():
+            return ""
+        with open(p) as f:
+            lines = f.readlines()
+        for line in reversed(lines):
+            try:
+                msg = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if msg.get("type") == "human":
+                content = msg.get("message", {}).get("content", "")
+                # Content can be a string or a list of blocks
+                if isinstance(content, str):
+                    return content
+                if isinstance(content, list):
+                    parts = []
+                    for block in content:
+                        if isinstance(block, str):
+                            parts.append(block)
+                        elif isinstance(block, dict) and block.get("type") == "text":
+                            parts.append(block.get("text", ""))
+                    return " ".join(parts)
+    except (OSError, KeyError):
+        pass
+    return ""
 
 
 def build_input_prompt(input_data: dict) -> str:
@@ -288,36 +309,38 @@ def build_input_prompt(input_data: dict) -> str:
     last_message = input_data.get("last_assistant_message", "")
     hook_message = input_data.get("message", "")
 
+    # Try to get what the developer asked for
+    user_request = ""
+    transcript_path = input_data.get("transcript_path", "")
+    if transcript_path:
+        user_request = _read_last_user_message(transcript_path)
+
+    user_context = f"\n[The developer asked: {user_request}]" if user_request else ""
+
     if event == "Stop" and last_message:
-        truncated = last_message[:200]
-        if len(last_message) > 200:
-            truncated += "..."
-        return f"[Claude just finished a task] {truncated}"
+        return f"[Claude just finished a task] {last_message}{user_context}"
 
     if event == "Notification":
         if notification_type == "idle_timeout":
-            return "[The developer has gone silent. Claude is idle, waiting for input. Nobody is here.]"
+            return f"[The developer has gone silent. Claude is idle, waiting for input. Nobody is here.]{user_context}"
         if notification_type == "permission_request":
-            context = f" Context: {hook_message[:150]}" if hook_message else ""
-            return f"[Claude is asking the developer for permission to do something.{context}]"
+            context = f" Context: {hook_message}" if hook_message else ""
+            return f"[Claude is asking the developer for permission to do something.{context}]{user_context}"
         if notification_type == "error":
-            context = f" What happened: {hook_message[:150]}" if hook_message else ""
-            return f"[Something errored or failed.{context}]"
+            context = f" What happened: {hook_message}" if hook_message else ""
+            return f"[Something errored or failed.{context}]{user_context}"
         if notification_type == "warning":
-            context = f" Warning: {hook_message[:150]}" if hook_message else ""
-            return f"[A warning was raised.{context}]"
+            context = f" Warning: {hook_message}" if hook_message else ""
+            return f"[A warning was raised.{context}]{user_context}"
         # general notification
-        context = f" {hook_message[:150]}" if hook_message else ""
-        return f"[A notification occurred.{context}]"
+        context = f" {hook_message}" if hook_message else ""
+        return f"[A notification occurred.{context}]{user_context}"
 
     # Fallback for any other event
     if last_message:
-        truncated = last_message[:200]
-        if len(last_message) > 200:
-            truncated += "..."
-        return truncated
+        return f"{last_message}{user_context}"
 
-    return f"[Event: {event}]"
+    return f"[Event: {event}]{user_context}"
 
 
 async def main() -> None:
