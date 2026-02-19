@@ -229,11 +229,19 @@ def main() -> None:
     # Determine notification sub-type for Notification events
     notification_type = None
     if event_type == "Notification":
+        # Prefer the notification_type field from Claude Code's JSON payload
+        raw_notif_type = input_data.get("notification_type", "")
+        is_idle = raw_notif_type == "idle_prompt"
+
+        # Fall back to message text parsing if field is missing
         message = input_data.get("message", "")
         notification_type = categorize_notification(message)
+        if not is_idle:
+            is_idle = notification_type == "idle_timeout"
 
-        # Enforce cooldown for idle notifications
-        if notification_type == "idle_timeout":
+        # Enforce cooldown only for idle notifications
+        if is_idle:
+            notification_type = "idle_timeout"  # normalize for gladosify
             if is_idle_on_cooldown():
                 sys.exit(0)
             mark_idle_cooldown()
