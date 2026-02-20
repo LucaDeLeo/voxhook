@@ -29,6 +29,9 @@ import random
 from pathlib import Path
 from typing import Optional
 
+SCRIPT_DIR = Path(__file__).parent
+MUTE_FILE = SCRIPT_DIR.parent / ".muted"
+
 # Add parent directory to path for importing common module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -345,6 +348,10 @@ def main() -> None:
         logger.setLevel(logging.DEBUG)
         logger.debug("Debug mode enabled - verbose logging active")
 
+    # Global mute
+    if MUTE_FILE.exists():
+        sys.exit(0)
+
     logger.info(f"Push notification hook started for topic: {topic}, server: {server}, debug: {debug_mode}")
 
     try:
@@ -355,6 +362,11 @@ def main() -> None:
             logger.debug("HOOK DATA DUMP:")
             logger.debug(json.dumps(input_data, indent=2, default=str))
             logger.debug("=" * 60)
+
+        # Per-project suppress
+        cwd = input_data.get("cwd", "")
+        if cwd and (Path(cwd) / ".voxhook-suppress").exists():
+            sys.exit(0)
 
         hook_event_name = get_hook_event(input_data)
         tool_name = get_tool_name(input_data)

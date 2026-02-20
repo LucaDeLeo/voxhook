@@ -11,6 +11,8 @@ build/
 .idle_cooldown
 .glados_history.json
 .glados_history.tmp
+.muted
+.voxhook-suppress
 
 # Personal media / test files (don't commit to repo)
 *.webm

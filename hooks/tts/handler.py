@@ -31,6 +31,7 @@ import time
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
+MUTE_FILE = SCRIPT_DIR.parent / ".muted"
 CONFIG_FILE = SCRIPT_DIR / "config.json"
 GENERATE_SCRIPT = SCRIPT_DIR / "generate.py"
 GENERATE_PIPER_SCRIPT = SCRIPT_DIR / "generate_piper.py"
@@ -202,6 +203,10 @@ def main() -> None:
     parser.add_argument("--ntfy-topic", type=str, default=None, help="ntfy.sh topic for push notifications")
     args = parser.parse_args()
 
+    # Global mute
+    if MUTE_FILE.exists():
+        sys.exit(0)
+
     config = load_config()
 
     if not config.get("enabled", True):
@@ -214,6 +219,11 @@ def main() -> None:
         input_data = {}
 
     event_type = input_data.get("hook_event_name", "Stop")
+
+    # Per-project suppress
+    cwd_raw = input_data.get("cwd", "")
+    if cwd_raw and (Path(cwd_raw) / ".voxhook-suppress").exists():
+        sys.exit(0)
 
     # Suppress for delegate (agent) sessions
     if config.get("suppress_delegate_mode", True):

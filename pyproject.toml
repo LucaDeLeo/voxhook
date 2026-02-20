@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "voxhook"
+version = "0.1.0"
+description = "TTS + push notifications for Claude Code"
+requires-python = ">=3.11"
+license = "MIT"
+
+[project.scripts]
+vox = "voxhook.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["voxhook"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"hooks" = "voxhook/_data/hooks"
+"templates" = "voxhook/_data/templates"
+"models" = "voxhook/_data/models"

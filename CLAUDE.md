@@ -81,6 +81,33 @@ echo '{"hook_event_name":"Stop","cwd":"/path/to/project"}' | uv run hooks/tts/ha
 uv run hooks/notify/test.py
 ```
 
+## `vox` CLI
+
+Installable via `uv tool install .` (or `uv tool install git+<url>`). Provides a `vox` command:
+
+```
+vox              → toggle global mute (fastest: 3 chars + enter)
+vox mute         → explicit mute on
+vox unmute       → explicit unmute
+vox suppress     → create .voxhook-suppress in CWD (per-project)
+vox unsuppress   → remove it
+vox status       → show mute state + current dir suppress state
+vox install      → interactive setup (Python port of install.sh)
+vox uninstall    → remove hooks + settings entries
+```
+
+### Sentinel files (mute/suppress)
+
+- **Global mute**: `~/.claude/hooks/voxhook/.muted` — file exists = all handlers exit(0)
+- **Per-project suppress**: `.voxhook-suppress` in project dir — file exists = handlers exit(0) for that project
+- Both checked via fast `Path.exists()` before any processing
+
+### Package structure
+
+- `pyproject.toml` — hatchling build, `vox` console_scripts entry
+- `voxhook/` — Python package (cli.py, installer.py)
+- hooks/, templates/, models/ bundled as package data via `force-include`
+
 ## Install Location
 
-Source repo is here; `install.sh` copies to `~/.claude/hooks/voxhook/` and patches `~/.claude/settings.json`. When developing, edit files here then re-run `./install.sh` to deploy.
+Source repo is here; `install.sh` copies to `~/.claude/hooks/voxhook/` and patches `~/.claude/settings.json`. When developing, edit files here then re-run `./install.sh` to deploy. Alternatively, use `vox install` after `uv tool install .`.
