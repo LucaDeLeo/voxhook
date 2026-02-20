@@ -1,4 +1,4 @@
-"""Voxhook installer — Python port of install.sh."""
+"""Voxhook interactive installer."""
 
 import json
 import os
@@ -196,11 +196,11 @@ def _remove_settings() -> None:
 
 
 def run_install() -> None:
-    """Interactive installer — Python port of install.sh."""
+    """Interactive installer."""
     source_dir = _find_source_dir()
     if source_dir is None:
         err("Cannot find voxhook source files.")
-        err("Run from cloned repo or install via: uv tool install git+<url>")
+        err("Install via: uv tool install git+https://github.com/LucaDeLeo/voxhook")
         sys.exit(1)
 
     info(f"Source: {source_dir}")

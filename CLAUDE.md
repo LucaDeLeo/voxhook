@@ -63,7 +63,7 @@ Two independent hook handlers, both triggered by Claude Code hook events (JSON o
 
 ```bash
 # Install hooks to ~/.claude/hooks/voxhook/
-./install.sh
+uv tool install . && vox install
 
 # Pre-generate all template audio (requires reference voice)
 uv run --python 3.11 hooks/tts/generate.py --pre-generate
@@ -83,7 +83,7 @@ uv run hooks/notify/test.py
 
 ## `vox` CLI
 
-Installable via `uv tool install .` (or `uv tool install git+<url>`). Provides a `vox` command:
+Install via `uv tool install git+https://github.com/LucaDeLeo/voxhook` (or `uv tool install .` from a clone). Provides a `vox` command:
 
 ```
 vox              → toggle global mute (fastest: 3 chars + enter)
@@ -92,7 +92,7 @@ vox unmute       → explicit unmute
 vox suppress     → create .voxhook-suppress in CWD (per-project)
 vox unsuppress   → remove it
 vox status       → show mute state + current dir suppress state
-vox install      → interactive setup (Python port of install.sh)
+vox install      → interactive setup
 vox uninstall    → remove hooks + settings entries
 ```
 
@@ -110,4 +110,4 @@ vox uninstall    → remove hooks + settings entries
 
 ## Install Location
 
-Source repo is here; `install.sh` copies to `~/.claude/hooks/voxhook/` and patches `~/.claude/settings.json`. When developing, edit files here then re-run `./install.sh` to deploy. Alternatively, use `vox install` after `uv tool install .`.
+`vox install` copies hooks to `~/.claude/hooks/voxhook/` and patches `~/.claude/settings.json`. When developing, run `uv tool install . && vox install` to redeploy.

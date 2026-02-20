@@ -122,7 +122,7 @@ def main() -> None:
     sub.add_parser("suppress", help="Silence voxhook for current project")
     sub.add_parser("unsuppress", help="Re-enable voxhook for current project")
     sub.add_parser("status", help="Show current mute/suppress state")
-    sub.add_parser("install", help="Interactive setup (replaces install.sh)")
+    sub.add_parser("install", help="Interactive setup")
     sub.add_parser("uninstall", help="Remove hooks and settings entries")
 
     args = parser.parse_args()

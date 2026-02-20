@@ -24,5 +24,5 @@ reptilian-brain-clean.*
 reptilian-brain-ref.*
 Disco Elysium*
 
-# Dev symlink (install.sh copies the real template)
+# Dev symlink (vox install copies the real template)
 hooks/tts/templates.json
