@@ -4,7 +4,7 @@ Push notifications + TTS for [Claude Code](https://docs.anthropic.com/en/docs/cl
 
 Get notified when Claude finishes a task — via your phone (ntfy.sh) and/or a GLaDOS voice that delivers sardonic commentary on what Claude actually did.
 
-No API key needed, no extra cost. Dynamic TTS uses the [Agent SDK](https://docs.anthropic.com/en/docs/claude-code/agent-sdk) which uses your Claude Code auth — the same billing you're already paying for. Requires a Claude Pro or Max plan (anything that includes Claude Code).
+No API key needed, no extra cost. Dynamic TTS uses the [Agent SDK](https://docs.anthropic.com/en/docs/claude-code/agent-sdk) which uses your Claude Code auth — the same billing you're already paying for. Requires a Claude Pro or Max plan.
 
 ## Quick install
 
